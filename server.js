@@ -12,6 +12,7 @@ app.use(cors());
 
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
+app.get('/', handleError)
 
 function handleLocationRequest(req, res) {
   //res.send('location');
@@ -45,6 +46,13 @@ function Weather(weatherData) {
   this.time = weatherData.datetime;
 }
 
+function handleError(req, res) {
+  const error = {
+    status:500,
+    responseText: "Sorry, something went wrong",
+  };
+  res.send(error);
+}
 app.use('*', (req, res) => {
   res.send('Test');
 });
