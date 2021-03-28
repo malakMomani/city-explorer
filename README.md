@@ -16,21 +16,48 @@ JavaScript
 Client-Server mode
 
 ## Change Log
-<!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
-
-01-01-2001 4:59pm - Application now has a fully-functional express server, with a GET route for the location resource.
+28-03-2021 4:30pm - Application now can get your location
+28-03-2021 9:05pm - Application now return the weather for selected location
 
 ## Credits and Collaborations
-<!-- Give credit (and a link) to other people or resources that helped you build this application. -->
+(Heroku)[https://dashboard.heroku.com/apps/lab06-city-explorer] -> to deploy my project
+**Resourses** :
+- (Node JS Docs)[https://canvas.instructure.com/courses/2628705/assignments/20865128]
+- (npm JS Docs)[https://docs.npmjs.com/]
+- (Express JS Docs)[http://expressjs.com/en/4x/api.html]
+- (dotenv Doc)[https://www.npmjs.com/package/dotenv]
+
 
 
 **Time Estimate**
-Number and name of feature: 
+Number and name of feature: feature 1 Repository Set Up
 
-Estimate of time needed to complete: _____
+Estimate of time needed to complete: half hour
 
-Start time: _____
+Start time: 2:40pm
 
-Finish time: _____
+Finish time: 3:14pm
 
-Actual time needed to complete: _____
+Actual time needed to complete: 45 minutes
+
+------------------------------------------------------------
+Number and name of feature: feature 2 Location
+
+Estimate of time needed to complete: an hour
+
+Start time: 3:30pm
+
+Finish time: 4:30pm
+
+Actual time needed to complete: an hour
+
+------------------------------------------------------------
+Number and name of feature: feature 3 Weather
+
+Estimate of time needed to complete: an hour
+
+Start time: 7:30pm
+
+Finish time: 9:15pm
+
+Actual time needed to complete: an hour and 45 minutes
