@@ -20,6 +20,7 @@ function handleLocationRequest(req, res) {
 }
 
 function Location(data) {
+  this.search_query = data.type;
   this.formatted_query = data.display_name;
   this.latitude = data.lat;
   this.longitude = data.lon;
