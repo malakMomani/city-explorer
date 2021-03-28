@@ -12,7 +12,7 @@ app.use(cors());
 
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
-app.get('/', handleError)
+app.get('', handleError)
 
 function handleLocationRequest(req, res) {
   //res.send('location');
