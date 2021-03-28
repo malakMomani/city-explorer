@@ -20,7 +20,7 @@ function handleLocationRequest(req, res) {
 }
 
 function Location(data) {
-  this.name = data.display_name;
+  this.formatted_query = data.display_name;
   this.latitude = data.lat;
   this.longitude = data.lon;
 
@@ -34,10 +34,12 @@ function handleWeatherRequest() {
     weathers.push(new Weather(weather));
   });
 
+  res.send(weathers);
 }
 
-function Weather(data){
-
+function Weather(weatherData){
+  this.forecast = weatherData.forecast;
+  this.time = weatherData.time;
 }
 
 app.use('*', (req, res) => {
