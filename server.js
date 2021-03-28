@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const { query } = require('express');
 
 const PORT = process.env.PORT;
 const app = express();
@@ -14,33 +15,34 @@ app.get('/weather', handleWeatherRequest);
 
 function handleLocationRequest(req, res) {
   //res.send('location');
+  const query = req.query.city;
   const locationData = require('./data/location.json');
-  const location = new Location(locationData[0]);
+  const location = new Location(locationData[0], query);
   res.send(location);
 }
 
-function Location(data) {
-  this.search_query = data.type;
+function Location(data, query) {
+  this.search_query = query;
   this.formatted_query = data.display_name;
   this.latitude = data.lat;
   this.longitude = data.lon;
 
 }
 
-function handleWeatherRequest() {
+function handleWeatherRequest(req, res) {
   const weatherData = require('./data/weather.json');
-  const weathers= [];
+  const weathers = [];
 
-  weatherData.data.forEach(weather =>{
+  weatherData.data.forEach(weather => {
     weathers.push(new Weather(weather));
   });
 
   res.send(weathers);
 }
 
-function Weather(weatherData){
-  this.forecast = weatherData.forecast;
-  this.time = weatherData.time;
+function Weather(weatherData) {
+  this.forecast = weatherData.weather.description;
+  this.time = weatherData.datetime;
 }
 
 app.use('*', (req, res) => {
