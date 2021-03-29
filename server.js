@@ -12,11 +12,14 @@ app.use(cors());
 
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
-app.get('', handleError)
+app.use('*', handleError)
 
 function handleLocationRequest(req, res) {
   //res.send('location');
   const query = req.query.city;
+  if(!query) {
+    res.status(404).send('Sorry, No city was found !!');
+  }
   const locationData = require('./data/location.json');
   const location = new Location(locationData[0], query);
   res.send(location);
@@ -47,12 +50,10 @@ function Weather(weatherData) {
 }
 
 function handleError(req, res) {
-  const error = {
-    status:500,
-    responseText: "Sorry, something went wrong",
-  };
-  res.send(error);
+  res.status(500).send('Sorry, something went wrong !!');
+
 }
+
 app.use('*', (req, res) => {
   res.send('Test');
 });
