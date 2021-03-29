@@ -37,7 +37,7 @@ function handleLocationRequest(req, res) {
     res.status(200).send(locationInfo);
   }).catch((error) =>{
     console.log('ERROR', error);
-    res.status(500).send('Sorry, something went wrong');
+    res.send('Sorry, something went wrong');
   }) ;
 
   
