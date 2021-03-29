@@ -7,8 +7,17 @@ const cors = require('cors');
 const superagent = require('superagent');
 const { query, response } = require('express');
 
+let locationInfo = {};
+let cityName = '';
+
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const PORT = process.env.PORT;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
+const cityQueryParam = {
+  key: GEOCODE_API_KEY,
+  q: cityName,
+  format: 'json'
+};
 const app = express();
 app.use(cors());
 
@@ -16,31 +25,25 @@ app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
 app.use('*', handleError)
 
+
 function handleLocationRequest(req, res) {
   //res.send('location');
-  const query = req.query.city;
+  cityName = req.query.city;
   //const url = "https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${query}&format=json";
   const url = 'https://us1.locationiq.com/v1/search.php';
-  
-  const cityQueryParam = {
-    key: GEOCODE_API_KEY,
-    q: query,
-    format: 'json'
-  };
-
-  if(!query) {
+  if (!cityName) {
     res.status(404).send('Sorry, No city was found !!');
   }
 
   superagent.get(url).query(cityQueryParam).then(resdata => {
-    const locationInfo = new Location(query,resdata.body[0]);
+    locationInfo = new Location(cityName, resdata.body[0]);
     res.status(200).send(locationInfo);
-  }).catch((error) =>{
+  }).catch((error) => {
     console.log('ERROR', error);
     res.send('Sorry, something went wrong');
-  }) ;
+  });
 
-  
+
   // const locationData = require('./data/location.json');
   // const location = new Location(locationData[0], query);
   // res.send(location);
@@ -55,11 +58,16 @@ function Location(city, geoData) {
 }
 
 function handleWeatherRequest(req, res) {
-  const weatherData = require('./data/weather.json');
+
+  // const weatherData = require('./data/weather.json');
+  const url = `https://api.weatherbit.io/v2.0/current?lat=${locationInfo.latitude}&lon=${locationInfo.longitude}&key=${WEATHER_API_KEY}`;
   const weathers = [];
 
-  weatherData.data.map(weather => {
-    weathers.push(new Weather(weather));
+
+  superagent.get(url).then(resdata => {
+    resdata.map(weather =>{
+      weathers.push(new Weather(weather));
+    });
   });
 
   res.send(weathers);
