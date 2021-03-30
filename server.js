@@ -13,6 +13,7 @@ let cityName = '';
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const PORT = process.env.PORT;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
+const PARK_API_KEY = process.env.PARK_API_KEY;
 const cityQueryParam = {
   key: GEOCODE_API_KEY,
   q: cityName,
@@ -23,7 +24,8 @@ app.use(cors());
 
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
-app.use('*', handleError)
+app.use('/park', handleParkRequest);
+
 
 
 function handleLocationRequest(req, res) {
@@ -31,6 +33,7 @@ function handleLocationRequest(req, res) {
   cityName = req.query.city;
   //const url = "https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${query}&format=json";
   const url = 'https://us1.locationiq.com/v1/search.php';
+  
   if (!cityName) {
     res.status(404).send('Sorry, No city was found !!');
   }
@@ -59,18 +62,28 @@ function Location(city, geoData) {
 
 function handleWeatherRequest(req, res) {
 
+  cityName = req.query.city;
   // const weatherData = require('./data/weather.json');
-  const url = `https://api.weatherbit.io/v2.0/current?lat=${locationInfo.latitude}&lon=${locationInfo.longitude}&key=${WEATHER_API_KEY}`;
-  const weathers = [];
+  const url = `https://api.weatherbit.io/v2.0/forecast/daily?`;
+
+  const queryObject ={
+    lat: req.query.latitude,
+    lon: req.query.longitude,
+    key: WEATHER_API_KEY
+  }
 
 
-  superagent.get(url).then(resdata => {
-    resdata.map(weather =>{
-      weathers.push(new Weather(weather));
+  superagent.get(url).query(queryObject).then(resdata => {
+    const weatherData = resdata.body.data.map(weather =>{
+      return new Weather(weather);
     });
+    res.send(weatherData);
+  }).catch((error) =>{
+    console.log('ERROR',error);
+    res.status(500).send('sth wrong');
   });
 
-  res.send(weathers);
+  
 }
 
 function Weather(weatherData) {
@@ -78,9 +91,26 @@ function Weather(weatherData) {
   this.time = weatherData.datetime;
 }
 
-function handleError(req, res) {
-  res.status(500).send('Sorry, something went wrong !!');
+function handleParkRequest(req, res) {
 
+  const url = `https://developer.nps.gov/api/v1/parks?q=${req.query.city}&api_key=${PARK_API_KEY}`;
+
+  superagent.get(url).then(resData => {
+    const Parks = resData.body.data.map(park=>{
+      return new Park(park);
+    });
+    res.send(Parks);
+  }).catch(error =>{
+    console.log('ERROR',error);
+    res.status(500).send('sth wrong');
+  });
+}
+
+function Park(data) {
+  this.name = data.name;
+  this.address = `${data.adresses[0].linel},${data.adresses[0].city} , ${data.adressess[0].stateCode} , ${data.adrersses[0].postalCode}`;
+  this.fee = '0.00';
+  this.Park_url = data.url;
 }
 
 app.use('*', (req, res) => {
