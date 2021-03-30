@@ -10,15 +10,12 @@ const { query, response } = require('express');
 let locationInfo = {};
 let cityName = '';
 
+
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const PORT = process.env.PORT;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 const PARK_API_KEY = process.env.PARK_API_KEY;
-const cityQueryParam = {
-  key: GEOCODE_API_KEY,
-  q: cityName,
-  format: 'json'
-};
+
 const app = express();
 app.use(cors());
 
@@ -32,21 +29,29 @@ function handleLocationRequest(req, res) {
   //res.send('location');
   cityName = req.query.city;
   //const url = "https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${query}&format=json";
+  //console.log(cityName);
+  const cityQueryParam = {
+    key: GEOCODE_API_KEY,
+    q: cityName,
+    format: 'json'
+  };
+  console.log(GEOCODE_API_KEY);
   const url = 'https://us1.locationiq.com/v1/search.php';
-  
+
   if (!cityName) {
     res.status(404).send('Sorry, No city was found !!');
+  } else {
+
+    superagent.get(url).query(cityQueryParam).then(resdata => {
+      locationInfo = new Location(cityName, resdata.body[0]);
+      console.log(locationInfo);
+      res.status(200).send(locationInfo);
+    }).catch((error) => {
+      console.log('ERROR', error);
+      res.status(404).send('Sorry, something went wrong');
+    });
+
   }
-
-  superagent.get(url).query(cityQueryParam).then(resdata => {
-    locationInfo = new Location(cityName, resdata.body[0]);
-    res.status(200).send(locationInfo);
-  }).catch((error) => {
-    console.log('ERROR', error);
-    res.send('Sorry, something went wrong');
-  });
-
-
   // const locationData = require('./data/location.json');
   // const location = new Location(locationData[0], query);
   // res.send(location);
@@ -57,7 +62,6 @@ function Location(city, geoData) {
   this.formatted_query = geoData.display_name;
   this.latitude = geoData.lat;
   this.longitude = geoData.lon;
-
 }
 
 function handleWeatherRequest(req, res) {
@@ -66,7 +70,7 @@ function handleWeatherRequest(req, res) {
   // const weatherData = require('./data/weather.json');
   const url = `https://api.weatherbit.io/v2.0/forecast/daily?`;
 
-  const queryObject ={
+  const queryObject = {
     lat: req.query.latitude,
     lon: req.query.longitude,
     key: WEATHER_API_KEY
@@ -74,16 +78,16 @@ function handleWeatherRequest(req, res) {
 
 
   superagent.get(url).query(queryObject).then(resdata => {
-    const weatherData = resdata.body.data.map(weather =>{
+    const weatherData = resdata.body.data.map(weather => {
       return new Weather(weather);
     });
     res.send(weatherData);
-  }).catch((error) =>{
-    console.log('ERROR',error);
+  }).catch((error) => {
+    console.log('ERROR', error);
     res.status(500).send('sth wrong');
   });
 
-  
+
 }
 
 function Weather(weatherData) {
@@ -96,16 +100,16 @@ function handleParkRequest(req, res) {
   const url = `https://developer.nps.gov/api/v1/parks?q=${req.query.city}&api_key=${PARK_API_KEY}&limit=10`;
 
   superagent.get(url).then(resData => {
-    const Parks = resData.body.data.map(park=>{
+    //console.log(resData.body);
+    const Parks = resData.body.data.map(park => {
       return new Park(park);
     });
     res.send(Parks);
-  }).catch(error =>{
-    console.log('ERROR',error);
+  }).catch(error => {
+    console.log('ERROR', error);
     res.status(500).send('sth wrong');
   });
 }
-
 function Park(data) {
   this.name = data.name;
   this.address = `${data.adresses[0].linel},${data.adresses[0].city} , ${data.adressess[0].stateCode} , ${data.adrersses[0].postalCode}`;
