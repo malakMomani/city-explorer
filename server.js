@@ -93,7 +93,7 @@ function Weather(weatherData) {
 
 function handleParkRequest(req, res) {
 
-  const url = `https://developer.nps.gov/api/v1/parks?q=${req.query.city}&api_key=${PARK_API_KEY}`;
+  const url = `https://developer.nps.gov/api/v1/parks?q=${req.query.city}&api_key=${PARK_API_KEY}&limit=10`;
 
   superagent.get(url).then(resData => {
     const Parks = resData.body.data.map(park=>{
