@@ -19,13 +19,14 @@ const PARK_API_KEY = process.env.PARK_API_KEY;
 const app = express();
 app.use(cors());
 
-const client = new pg.Client({
-  connectionString: DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+// const client = new pg.Client({
+//   connectionString: DATABASE_URL,
+//   ssl: {
+//     rejectUnauthorized: false
+//   }
+// });
 
+ const client = new pg.Client(DATABASE_URL);
 app.get('/', (req, res) => {
   res.status(200).send('All Good');
 });
