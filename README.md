@@ -61,3 +61,15 @@ Start time: 7:30pm
 Finish time: 9:15pm
 
 Actual time needed to complete: an hour and 45 minutes
+
+-------------------------------------------------------------
+
+Number and name of feature: feature 3 Refactor weather constructor to use `map` instead of `forEach`
+
+Estimate of time needed to complete: 5 minutes
+
+Start time: 2:50pm
+
+Finish time: 2:55pm
+
+Actual time needed to complete: 5 minutes
