@@ -6,6 +6,8 @@ const express = require('express');
 const cors = require('cors');
 const superagent = require('superagent');
 const pg = require('pg');
+const yelp = require('yelp-fusion');
+
 
 const { query, response } = require('express');
 
@@ -15,18 +17,21 @@ const PORT = process.env.PORT;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
 const DATABASE_URL = process.env.DATABASE_URL;
 const PARK_API_KEY = process.env.PARK_API_KEY;
+const MOVIE_API_KEY = process.env.MOVIE_API_KEY;
+const REST_API_KEY = process.env.REST_API_KEY;
 
 const app = express();
 app.use(cors());
 
-const client = new pg.Client({
-  connectionString: DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+// const client = new pg.Client({
+//   connectionString: DATABASE_URL,
+//   ssl: {
+//     rejectUnauthorized: false
+//   }
+// });
 
-//  const client = new pg.Client(DATABASE_URL);
+const client = new pg.Client(DATABASE_URL);
+
 app.get('/', (req, res) => {
   res.status(200).send('All Good');
 });
@@ -34,8 +39,40 @@ app.get('/', (req, res) => {
 
 app.get('/location', handleLocationRequest);
 app.get('/weather', handleWeatherRequest);
-app.use('/park', handleParkRequest);
+app.get('/park', handleParkRequest);
+app.get('/movies', handleMoviesRequest);
+app.get('/restaurant', handleRestRequest);
 
+function handleRestRequest(req, res) {
+  let location = req.query.search;
+  const url = `https://api.yelp.com/v3/businesses/${location}`;
+}
+
+
+function handleMoviesRequest(req, res) {
+  const q = req.query.query;
+
+  const url = `https://api.themoviedb.org/3/search/movie?api_key=${MOVIE_API_KEY}&query=${q}&limit=20`
+  superagent.get(url).then(result => {
+    const movies = result.body.results.map(movie => {
+      return new Movie(movie);
+    });
+    res.status(200).send(movies);
+  }).catch(error => {
+    res.status(404).send(error);
+  });
+
+}
+
+function Movie(movieData) {
+  this.title = movieData.title;
+  this.overview = movieData.overview;
+  this.average_votes = movieData.vote_average;
+  this.total_votes = movieData.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500${movieData.backdrop_path}`;
+  this.popularity = movieData.popularity;
+  this.released_on = movieData.release_date;
+}
 function handleLocationRequest(req, res) {
   const city = req.query.city;
   const selectValue = [city];
@@ -69,8 +106,6 @@ function handleLocationRequest(req, res) {
   }
 }
 
-
-
 function getFromAPI(city) {
   const queryParam = {
     key: GEOCODE_API_KEY,
@@ -98,7 +133,6 @@ function Location(data, query) {
 
 function handleWeatherRequest(req, res) {
 
-  cityName = req.query.city;
   // const weatherData = require('./data/weather.json');
   const url = `https://api.weatherbit.io/v2.0/forecast/daily?`;
 
@@ -132,7 +166,7 @@ function handleParkRequest(req, res) {
   const url = `https://developer.nps.gov/api/v1/parks?q=${req.query.city}&api_key=${PARK_API_KEY}&limit=10`;
 
   superagent.get(url).then(resData => {
-    //console.log(resData.body);
+    //console.log(resData);
     const Parks = resData.body.data.map(park => {
       return new Park(park);
     });
