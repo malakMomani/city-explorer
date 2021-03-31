@@ -5,6 +5,9 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const superagent = require('superagent');
+const pg = require('pg');
+const { query } = require('express');
+
 const { query, response } = require('express');
 
 let locationInfo = {};
@@ -14,18 +17,76 @@ let cityName = '';
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const PORT = process.env.PORT;
 const GEOCODE_API_KEY = process.env.GEOCODE_API_KEY;
+const DATABASE_URL = process.env.DATABASE_URL;
 const PARK_API_KEY = process.env.PARK_API_KEY;
 
 const app = express();
 app.use(cors());
 
+
+const client = new pg.Client(DATABASE_URL);
+
+app.get('/', (req, res) => {
+  res.status(200).send('All Good');
+});
+
+
 app.get('/location', handleLocationRequest);
+app.use('*', handleError)
 app.get('/weather', handleWeatherRequest);
 app.use('/park', handleParkRequest);
 
-
-
 function handleLocationRequest(req, res) {
+  const city = req.query.city;
+  const selectValue = [city];
+  const selectQ = `select * from locations where search_query=$1;`
+
+
+  if (!city) {
+    res.status(404).send('No city provided!!')
+  } else {
+    client.query(selectQ, selectValue).then(selectresult => {
+      if (selectresult.rows.length === 0) {
+        getFromAPI(city).then(apiResult => {
+          const insertValues = [apiResult.search_query, apiResult.formatted_query, apiResult.latitude, apiResult.longitude];
+          const insertQ = `insert into locations (search_query, formatted_query, latitude, longitude) values ($1 ,$2, $3, $4);`
+          client.query(insertQ, insertValues).then(insertResult => {
+            res.status(200).send(apiResult);
+          });
+        });
+      }
+      else {
+        res.status(200).send(selectresult.rows);
+      }
+    });
+  }
+}
+
+
+function getFromAPI(city) {
+  const queryParam = {
+    key: GEOCODE_API_KEY,
+    q: city,
+    format: 'json'
+  }
+  const url = `https://us1.locationiq.com/v1/search.php`;
+  let apiLocation = {};
+  return superagent.get(url).query(queryParam).then(resData => {
+    //console.log(resData.body[0]);
+
+    apiLocation = new Location(resData.body[0], city);
+    console.log(apiLocation);
+    return apiLocation;
+
+  });
+}
+function Location(data, query) {
+  this.search_query = query;
+  this.formatted_query = data.display_name;
+  this.latitude = data.lat;
+  this.longitude = data.lon;
+
+
   //res.send('location');
   cityName = req.query.city;
   //const url = "https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${query}&format=json";
@@ -120,5 +181,10 @@ function Park(data) {
 app.use('*', (req, res) => {
   res.send('Test');
 });
-
-app.listen(PORT, () => console.log(`Listening to Port ${PORT}`));
+client.connect().then(() => {
+  app.listen(PORT, () => {
+    console.log('Connected to database', client.connectionParameters.database);
+    console.log('Listening to port ', PORT);
+  });
+});
+//app.listen(PORT, () => console.log(`Listening to Port ${PORT}`));
