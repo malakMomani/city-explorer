@@ -6,7 +6,6 @@ const express = require('express');
 const cors = require('cors');
 const superagent = require('superagent');
 const pg = require('pg');
-const { query } = require('express');
 
 const { query, response } = require('express');
 
@@ -32,7 +31,6 @@ app.get('/', (req, res) => {
 
 
 app.get('/location', handleLocationRequest);
-app.use('*', handleError)
 app.get('/weather', handleWeatherRequest);
 app.use('/park', handleParkRequest);
 
