@@ -9,9 +9,6 @@ const pg = require('pg');
 
 const { query, response } = require('express');
 
-let locationInfo = {};
-let cityName = '';
-
 
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const PORT = process.env.PORT;
@@ -22,8 +19,12 @@ const PARK_API_KEY = process.env.PARK_API_KEY;
 const app = express();
 app.use(cors());
 
-
-const client = new pg.Client(DATABASE_URL);
+const client = new pg.Client({
+  connectionString: DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 app.get('/', (req, res) => {
   res.status(200).send('All Good');
@@ -50,15 +51,23 @@ function handleLocationRequest(req, res) {
           const insertQ = `insert into locations (search_query, formatted_query, latitude, longitude) values ($1 ,$2, $3, $4);`
           client.query(insertQ, insertValues).then(insertResult => {
             res.status(200).send(apiResult);
+          }).catch(error=>{
+            console.log('ERROR in insert query',error);
           });
+        }).catch(error=>{
+          console.log("ERROR in API", error);
         });
       }
       else {
         res.status(200).send(selectresult.rows);
       }
+    }).catch(error=>{
+      console.log("ERROR in select query",error);
     });
+
+    }
   }
-}
+
 
 
 function getFromAPI(city) {
@@ -84,43 +93,6 @@ function Location(data, query) {
   this.latitude = data.lat;
   this.longitude = data.lon;
 
-
-  //res.send('location');
-  cityName = req.query.city;
-  //const url = "https://us1.locationiq.com/v1/search.php?key=${GEOCODE_API_KEY}&q=${query}&format=json";
-  //console.log(cityName);
-  const cityQueryParam = {
-    key: GEOCODE_API_KEY,
-    q: cityName,
-    format: 'json'
-  };
-  console.log(GEOCODE_API_KEY);
-  const url = 'https://us1.locationiq.com/v1/search.php';
-
-  if (!cityName) {
-    res.status(404).send('Sorry, No city was found !!');
-  } else {
-
-    superagent.get(url).query(cityQueryParam).then(resdata => {
-      locationInfo = new Location(cityName, resdata.body[0]);
-      console.log(locationInfo);
-      res.status(200).send(locationInfo);
-    }).catch((error) => {
-      console.log('ERROR', error);
-      res.status(404).send('Sorry, something went wrong');
-    });
-
-  }
-  // const locationData = require('./data/location.json');
-  // const location = new Location(locationData[0], query);
-  // res.send(location);
-}
-
-function Location(city, geoData) {
-  this.search_query = city;
-  this.formatted_query = geoData.display_name;
-  this.latitude = geoData.lat;
-  this.longitude = geoData.lon;
 }
 
 function handleWeatherRequest(req, res) {
@@ -177,7 +149,7 @@ function Park(data) {
 }
 
 app.use('*', (req, res) => {
-  res.send('Test');
+  res.send('sth wrong');
 });
 client.connect().then(() => {
   app.listen(PORT, () => {
