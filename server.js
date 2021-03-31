@@ -19,14 +19,14 @@ const PARK_API_KEY = process.env.PARK_API_KEY;
 const app = express();
 app.use(cors());
 
-// const client = new pg.Client({
-//   connectionString: DATABASE_URL,
-//   ssl: {
-//     rejectUnauthorized: false
-//   }
-// });
+const client = new pg.Client({
+  connectionString: DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
- const client = new pg.Client(DATABASE_URL);
+//  const client = new pg.Client(DATABASE_URL);
 app.get('/', (req, res) => {
   res.status(200).send('All Good');
 });
@@ -52,22 +52,22 @@ function handleLocationRequest(req, res) {
           const insertQ = `insert into locations (search_query, formatted_query, latitude, longitude) values ($1 ,$2, $3, $4);`
           client.query(insertQ, insertValues).then(insertResult => {
             res.status(200).send(apiResult);
-          }).catch(error=>{
-            console.log('ERROR in insert query',error);
+          }).catch(error => {
+            console.log('ERROR in insert query', error);
           });
-        }).catch(error=>{
+        }).catch(error => {
           console.log("ERROR in API", error);
         });
       }
       else {
         res.status(200).send(selectresult.rows);
       }
-    }).catch(error=>{
-      console.log("ERROR in select query",error);
+    }).catch(error => {
+      console.log("ERROR in select query", error);
     });
 
-    }
   }
+}
 
 
 
